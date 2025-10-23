@@ -1,9 +1,9 @@
 FROM nvidia/cuda:11.6.2-devel-ubuntu20.04
 
 # Set environment variables
-ENV NVENCODE_CFLAGS "-I/usr/local/cuda/include"
-ENV CV_VERSION=4.2.0
-ENV DEBIAN_FRONTEND=noninteractive
+ENV NVENCODE_CFLAGS="-I/usr/local/cuda/include"
+ENV CV_VERSION="4.2.0"
+ENV DEBIAN_FRONTEND="noninteractive"
 
 # Get all dependencies
 RUN apt-get update && apt-get install -y \
@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     libsuitesparse-dev python3-pcl pcl-tools libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev libtbb2 libtbb-dev libjpeg-dev \
     libpng-dev libtiff-dev libdc1394-22-dev xfce4-terminal &&\
     rm -rf /var/lib/apt/lists/*
+
 
 # OpenCV with CUDA support
 WORKDIR /opencv
@@ -54,20 +55,27 @@ ldconfig &&\
 rm -rf /opencv
 
 WORKDIR /
+
 ENV OpenCV_DIR=/usr/share/OpenCV
 
 
-# PyTorch for CUDA 11.6
-RUN pip3 install torch==1.13.1+cu116 torchvision==0.14.1+cu116 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu116
+# Install compatible typing-extensions first
+RUN pip3 install "typing-extensions<4.6.0"
+
+# PyTorch for CUDA 11.6 (using available versions compatible with Python 3.8)
+RUN pip3 install torch==1.12.0+cu116 torchvision==0.13.0+cu116 torchaudio==0.12.0+cu116 --extra-index-url https://download.pytorch.org/whl/cu116
 ENV TORCH_CUDA_ARCH_LIST="3.5;5.0;6.0;6.1;7.0;7.5;8.0;8.6+PTX"
     
 # OpenPCDet
 RUN pip3 install numpy==1.23.0 llvmlite numba tensorboardX easydict pyyaml scikit-image tqdm SharedArray open3d mayavi av2 kornia pyquaternion
 RUN pip3 install spconv-cu116
+RUN apt update && apt install -y x11-apps
+RUN pip install open3d
+RUN pip install mayavi
 
-RUN git clone https://github.com/open-mmlab/OpenPCDet.git
+RUN git clone https://github.com/YangSophiaXiao/OpenPCDet_Docker_Compatible_Ubuntu24.04.git
 
-WORKDIR OpenPCDet
+WORKDIR OpenPCDet_Docker_Compatible_Ubuntu24.04/
 
 RUN python3 setup.py develop
     
